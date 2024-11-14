@@ -1,0 +1,35 @@
+name: CD 4 - Build and generate deployment script from main for prod environment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'checkout code'
+        uses: actions/checkout@v4
+
+      # build the project into a dacpac file
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+
+      # generate a deployment script
+      - name: 'Deploy dacpac'
+        run: sqlpackage /a:Script /sf:'bin/Debug/ContosoOutdoors.dacpac' /tcs:"${{ secrets.PROD_CONNECTION_STRING }};" /dsp:'deployment-script.sql'
+        working-directory: ContosoOutdoors
+    
+      # save the deployment script as an artifact
+      - name: 'Save deployment script'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-script
+          path: ContosoOutdoors/deployment-script.sql
+

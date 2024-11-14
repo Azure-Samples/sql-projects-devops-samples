@@ -1,0 +1,57 @@
+name: CI - Build and deploy test for main PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    # Containers must run in Linux based operating systems
+    runs-on: ubuntu-latest
+
+    # service/sidecar container for sql
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 1
+          SA_PASSWORD: ${{ secrets.CONTAINER_SQL_PASSWORD }}
+        ports:
+          - 1433:1433
+
+    steps:
+      - name: 'checkout code'
+        uses: actions/checkout@v4
+
+      # build the project into a dacpac file
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+  
+      - name: 'wait for sql container to be ready'
+        run: |
+          set +o pipefail +e
+          for i in {1..60};
+          do
+              sqlcmd -S localhost -U sa -P ${{ secrets.CONTAINER_SQL_PASSWORD }} -d master -Q "select getdate()"
+              if [ $? -eq 0 ]
+              then
+                  echo "sql server ready"
+                  break
+              else
+                  echo "not ready yet..."
+                  sleep 1
+              fi
+          done
+          set -o pipefail -e
+
+      # deploy the sql project
+      - name: 'Deploy dacpac'
+        run: sqlpackage /a:Publish /sf:'bin/Debug/ContosoOutdoors.dacpac' /tcs:"Server=localhost;Database=ContosoOutdoors;User Id=sa;Password=${{ secrets.CONTAINER_SQL_PASSWORD }};TrustServerCertificate=True;" /p:AllowIncompatiblePlatform=true
+        working-directory: ContosoOutdoors

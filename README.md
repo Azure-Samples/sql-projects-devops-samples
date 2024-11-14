@@ -1,57 +1,15 @@
-# Project Name
+# SQL projects DevOps samples
 
-(short, 1-3 sentenced, description of the project)
+This repository contains sample workflows for several scenarios related to SQL projects, including CI checks and deployments to multiple environments.
 
-## Features
+## Contents
 
-This project framework provides the following features:
-
-* Feature 1
-* Feature 2
-* ...
-
-## Getting Started
-
-### Prerequisites
-
-(ideally very short, if any)
-
-- OS
-- Library version
-- ...
-
-### Installation
-
-(ideally very short)
-
-- npm install [package name]
-- mvn install
-- ...
-
-### Quickstart
-(Add steps to get up and running quickly)
-
-1. git clone [repository clone url]
-2. cd [repository name]
-3. ...
-
-
-## Demo
-
-A demo app is included to show how to use the project.
-
-To run the demo, follow these steps:
-
-(Add steps to start up the demo)
-
-1.
-2.
-3.
+- [Get started](Demos/1-GetStarted.md)
+- [CI checks](Demos/2-ContinuousIntegration.md)
+- [Architecture options](Demos/3-ArchitectureOptions.md)
+- [Deploy to multiple environments](Demos/4-ContinuousDeployments.md)
 
 ## Resources
 
-(Any additional resources or related projects)
-
-- Link to supporting information
-- Link to similar sample
-- ...
+- [SQL projects documentation](https://aka.ms/sqlprojects)
+- [DacFx GitHub repository](https://github.com/microsoft/dacfx)

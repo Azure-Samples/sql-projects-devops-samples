@@ -1,0 +1,31 @@
+name: CD 1 - deploy dev from main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ContosoOutdoors/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'checkout code'
+        uses: actions/checkout@v4
+
+      # build the project into a dacpac file
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+
+      # deploy the sql project to dev
+      - name: 'Deploy dacpac'
+        run: sqlpackage /a:Publish /sf:'bin/Debug/ContosoOutdoors.dacpac' /tcs:"${{ secrets.DEV_CONNECTION_STRING }}"
+        working-directory: ContosoOutdoors

@@ -1,0 +1,28 @@
+name: CD 3 - Build and deploy from main to staging
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'checkout code'
+        uses: actions/checkout@v4
+
+      # build the project into a dacpac file
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+
+      # generate a deployment report
+      - name: 'Deploy dacpac'
+        run: sqlpackage /a:publish /sf:'bin/Debug/ContosoOutdoors.dacpac' /tcs:"${{ secrets.STAGING_CONNECTION_STRING }};" /p:GenerateSmartDefaults=True
+        working-directory: ContosoOutdoors
+      

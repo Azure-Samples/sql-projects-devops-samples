@@ -1,0 +1,42 @@
+name: CD 2 - deployreport on staging from main
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ContosoOutdoors/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'checkout code'
+        uses: actions/checkout@v4
+
+      # build the project into a dacpac file
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+
+      # generate a deployment report
+      - name: 'Deploy dacpac'
+        run: sqlpackage /a:deployreport /sf:'bin/Debug/ContosoOutdoors.dacpac' /tcs:"${{ secrets.STAGING_CONNECTION_STRING }};" /OutputPath:DeployReport.xml
+        working-directory: ContosoOutdoors
+      
+
+      # save the deployment script as an artifact
+      - name: 'Save deployment script'
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-report
+          path: ContosoOutdoors/DeployReport.xml
+
+      - name: Check for alerts
+        run: ./check-for-alerts.sh

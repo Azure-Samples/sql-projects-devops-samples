@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DeploymentReport xmlns="http://schemas.microsoft.com/sqlserver/dac/DeployReport/2012/02">
+    <Alerts>
+        <Alert Name="DataIssue">
+            <Issue
+                Value="The column [CO].[Brands].[EstablishedYear] on table [CO].[Brands] must be added, but the column has no default value and does not allow NULL values. If the table contains data, the ALTER script will not work. To avoid this issue you must either: add a default value to the column, mark it as allowing NULL values, or enable the generation of smart-defaults as a deployment option."
+                Id="1" />
+        </Alert>
+    </Alerts>
+    <Operations>
+        <Operation Name="Alter">
+            <Item Value="[CO].[Brands]" Type="SqlTable">
+                <Issue Id="1" />
+            </Item>
+            <Item Value="[CO].[SelectStarView]" Type="SqlView" />
+            <Item Value="[CO].[AddProductImage]" Type="SqlProcedure" />
+        </Operation>
+    </Operations>
+</DeploymentReport>
