@@ -1,0 +1,22 @@
+name: CI - Build with code analysis for PRs on main
+
+on:
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Build with code analysis
+      run: dotnet build -warnaserror ContosoOutdoors.sqlproj /p:RunSqlCodeAnalysis=true
+      working-directory: ContosoOutdoors

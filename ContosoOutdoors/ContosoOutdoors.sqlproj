@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <Sdk Name="Microsoft.Build.Sql" Version="0.2.3-preview" />
+  <PropertyGroup>
+    <Name>ContosoOutdoors</Name>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.SqlAzureV12DatabaseSchemaProvider</DSP>
+    <ModelCollation>1033, CI</ModelCollation>
+    <RootNamespace>ContosoOutdoors</RootNamespace>
+    <AssemblyName>ContosoOutdoors</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ErikEJ.DacFX.TSQLSmellSCA" Version="1.1.1" />
+    <PackageReference Include="Microsoft.SqlServer.Dacpacs.Azure.Master" Version="160.2.3" />
+  </ItemGroup>
+</Project>
