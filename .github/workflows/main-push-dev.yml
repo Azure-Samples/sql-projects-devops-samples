@@ -7,25 +7,52 @@ on:
     paths:
       - 'ContosoOutdoors/**'
 
+# OIDC: federated azure/login, no stored connection string. sqlpackage takes the
+# Entra access token via /at:, so DEV_CONNECTION_STRING is no longer needed.
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment: dev
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      SQL_SERVER: ${{ vars.DEV_SQL_SERVER }}      # e.g. myserver.database.windows.net
+      SQL_DATABASE: ${{ vars.DEV_SQL_DATABASE }}  # e.g. ContosoOutdoors
 
     steps:
       - name: 'checkout code'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # build the project into a dacpac file
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - name: Restore dependencies
         run: dotnet restore
       - name: Build
         run: dotnet build --no-restore
 
-      # deploy the sql project to dev
+      - name: Azure login (OIDC)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Acquire SQL access token
+        id: token
+        run: |
+          TOKEN="$(az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)"
+          echo "::add-mask::$TOKEN"
+          echo "sql_token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      # deploy the sql project to dev using the Entra access token (no connection string)
       - name: 'Deploy dacpac'
-        run: sqlpackage /a:Publish /sf:'bin/Debug/ContosoOutdoors.dacpac' /tcs:"${{ secrets.DEV_CONNECTION_STRING }}"
+        run: sqlpackage /a:Publish /sf:'bin/Debug/ContosoOutdoors.dacpac' /tsn:"$SQL_SERVER" /tdn:"$SQL_DATABASE" /at:"${{ steps.token.outputs.sql_token }}"
         working-directory: ContosoOutdoors
